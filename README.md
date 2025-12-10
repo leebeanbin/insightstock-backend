@@ -626,11 +626,9 @@ pnpm test
 
 ## 📚 추가 문서
 
-- [프론트엔드 README](../insightstock-frontend/README.md)
-- [빠른 시작 가이드](./QUICK_START.md) - **새로 추가!**
-- [셋업 가이드](./SETUP.md) - **새로 추가!**
-- [API 명세서](./docs/API.md) (작성 예정)
-- [개발 가이드](./docs/DEVELOPMENT.md) (작성 예정)
+- **[Quick Start](./QUICK_START.md)** - 빠른 시작 가이드
+- **[Setup Guide](./SETUP.md)** - 환경 설정 가이드
+- **[Architecture](./docs/ARCHITECTURE.md)** - 아키텍처 상세 설명
 
 ## 🎯 테스트 가능한 기능
 
