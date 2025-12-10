@@ -1,0 +1,358 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String?
+  chatContextEnabled Boolean @default(false) // 챗봇에서 사용자 정보 연결 동의 여부
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  conversations Conversation[]
+  portfolios    Portfolio[]
+  favorites     Favorite[]
+  history       History[]
+  notes         Note[]
+  learnings     Learning[]
+  newsActivities NewsUserActivity[]
+  messageFeedbacks MessageFeedback[]
+
+  @@map("users")
+}
+
+// ============================================
+// Stock & Market Data
+// ============================================
+
+model Stock {
+  id          String   @id @default(uuid())
+  code        String   @unique // 종목 코드 (예: 005930)
+  name        String   // 종목명
+  market      String   // KOSPI, KOSDAQ, NYSE, NASDAQ 등
+  sector      String?
+  currentPrice Float   @default(0)
+  change      Float    @default(0)
+  changeRate  Float    @default(0)
+  volume      BigInt   @default(0)
+  marketCap   BigInt?
+  currency    String   @default("KRW") // KRW, USD
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  prices      StockPrice[]
+  portfolios  Portfolio[]
+  favorites   Favorite[]
+  history     History[]
+  news        NewsStock[]
+
+  @@index([code])
+  @@index([market])
+  @@index([sector])
+  @@index([name]) // 검색 최적화: 종목명 검색
+  @@index([code, name]) // 복합 인덱스: 코드+이름 검색 최적화
+  @@map("stocks")
+}
+
+model StockPrice {
+  id        String   @id @default(uuid())
+  stockId   String
+  date      DateTime
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    BigInt
+  change    Float    @default(0)
+  changeRate Float   @default(0)
+  createdAt DateTime @default(now())
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([stockId, date])
+  @@index([stockId, date])
+  @@map("stock_prices")
+}
+
+// ============================================
+// News
+// ============================================
+
+model News {
+  id           String   @id @default(uuid())
+  title        String
+  content      String   @db.Text
+  summary      String?  @db.Text
+  source       String
+  url          String?  @unique
+  publishedAt  DateTime
+  sentiment    String?  // positive, negative, neutral
+  sentimentScore Float?
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  stocks      NewsStock[]
+  keyPoints   NewsKeyPoint[]
+  concepts    NewsConcept[]
+  userActivities NewsUserActivity[]
+
+  @@index([publishedAt])
+  @@index([sentiment])
+  @@index([publishedAt, sentiment]) // 복합 인덱스: 감정별 최신순 조회 최적화
+  @@index([title]) // 검색 최적화: 제목 검색
+  @@index([source]) // 검색 최적화: 출처 검색
+  @@map("news")
+}
+
+model NewsStock {
+  id      String @id @default(uuid())
+  newsId  String
+  stockId String
+
+  news  News  @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([newsId, stockId])
+  @@index([newsId])
+  @@index([stockId])
+  @@map("news_stocks")
+}
+
+model NewsKeyPoint {
+  id      String @id @default(uuid())
+  newsId  String
+  content String @db.Text
+
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  @@index([newsId])
+  @@map("news_key_points")
+}
+
+model NewsConcept {
+  id      String @id @default(uuid())
+  newsId  String
+  concept String
+
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  @@index([newsId])
+  @@map("news_concepts")
+}
+
+// ============================================
+// News User Activity (읽기, 좋아요, 즐겨찾기)
+// ============================================
+
+model NewsUserActivity {
+  id        String   @id @default(uuid())
+  userId    String
+  newsId    String
+  type      String   // read, like, favorite
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, newsId, type]) // 같은 뉴스에 대해 같은 타입은 한 번만
+  @@index([userId, type])
+  @@index([newsId, type])
+  @@index([userId, createdAt])
+  @@map("news_user_activities")
+}
+
+// ============================================
+// AI Chat
+// ============================================
+
+model Conversation {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  category  String?  // 카테고리 (예: "투자", "학습", "뉴스" 등)
+  tags      String[] // 태그 배열
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId])
+  @@index([updatedAt])
+  @@index([userId, category])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  userId         String
+  role           String   // user, assistant
+  content        String   @db.Text
+  sources        String[] // 관련 출처 URL 배열
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedbacks     MessageFeedback[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// 메시지 피드백 (좋아요/싫어요)
+model MessageFeedback {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  type      String   // like, dislike
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId]) // 같은 메시지에 대해 사용자당 하나의 피드백만
+  @@index([messageId])
+  @@index([userId])
+  @@map("message_feedbacks")
+}
+
+// ============================================
+// Portfolio
+// ============================================
+
+model Portfolio {
+  id           String   @id @default(uuid())
+  userId       String
+  stockId      String
+  quantity     Float
+  averagePrice Float
+  totalCost    Float    // quantity * averagePrice
+  currentValue Float    // quantity * currentPrice (계산)
+  profit       Float    // currentValue - totalCost
+  profitRate   Float    // (profit / totalCost) * 100
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stockId]) // 같은 종목은 한 번만 추가 가능
+  @@index([userId])
+  @@index([stockId])
+  @@map("portfolios")
+}
+
+// ============================================
+// Favorites & History
+// ============================================
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  stockId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stockId])
+  @@index([userId])
+  @@index([stockId])
+  @@map("favorites")
+}
+
+model History {
+  id        String   @id @default(uuid())
+  userId    String
+  stockId   String
+  type      String   @default("view") // view, search, etc.
+  viewedAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([userId, viewedAt])
+  @@index([stockId, viewedAt])
+  @@index([userId, stockId, viewedAt]) // 중복 방지용
+  @@index([userId, type, viewedAt]) // 사용자별 타입별 시간순 조회 최적화
+  @@map("history")
+}
+
+// ============================================
+// Learning & Notes
+// ============================================
+
+model Learning {
+  id            String   @id @default(uuid())
+  userId        String
+  concept       String
+  question      String   @db.Text
+  answer        String   @db.Text
+  relatedStocks String[] // stock codes
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("learnings")
+}
+
+model Note {
+  id             String   @id @default(uuid())
+  userId         String
+  title          String
+  content        String   @db.Text
+  tags           String[]
+  newsId         String?  // 스크랩한 뉴스 ID (선택)
+  scrapedContent String?  @db.Text // 스크랩한 뉴스 일부 내용
+  sourceUrl      String?  // 원본 뉴스 URL
+  chartData      Json?    // 차트 데이터 (JSON)
+  highlightStart Int?     // 하이라이팅 시작 오프셋 (문자 단위)
+  highlightEnd   Int?     // 하이라이팅 끝 오프셋 (문자 단위)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([updatedAt])
+  @@index([userId, newsId])
+  @@map("notes")
+}
+
+// ============================================
+// Embeddings (RAG)
+// ============================================
+// NOTE: pgvector 확장 설치 후 활성화
+// pgvector 설치: brew install pgvector 또는 https://github.com/pgvector/pgvector
+// 
+// model Embedding {
+//   id        String   @id @default(uuid())
+//   content   String   @db.Text
+//   embedding Unsupported("vector(1536)")? // pgvector extension 필요
+//   metadata  Json?    // 추가 메타데이터
+//   createdAt DateTime @default(now())
+//
+//   @@index([createdAt])
+//   @@map("embeddings")
+// }
+
