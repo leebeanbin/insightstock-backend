@@ -147,6 +147,7 @@ export async function createApp(): Promise<FastifyInstance> {
   const userActivityRoutes = (await import('./routes/UserActivityRoutes')).default;
   const learningRoutes = (await import('./routes/LearningRoutes')).default;
   const noteRoutes = (await import('./routes/NoteRoutes')).default;
+  const folioRoutes = (await import('./routes/FolioRoutes')).default;
   const imageRoutes = (await import('./routes/ImageRoutes')).default;
   const searchRoutes = (await import('./routes/SearchRoutes')).default;
   const monitoringRoutes = (await import('./routes/MonitoringRoutes')).default;
@@ -162,6 +163,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(userActivityRoutes, { prefix: '/api/user-activity' });
   await app.register(learningRoutes, { prefix: '/api/learning' });
   await app.register(noteRoutes, { prefix: '/api/notes' });
+  await app.register(folioRoutes, { prefix: '/api/folio' });
   await app.register(imageRoutes, { prefix: '/api/images' });
   await app.register(searchRoutes, { prefix: '/api/search' });
   await app.register(monitoringRoutes, { prefix: '/api/monitoring' });
