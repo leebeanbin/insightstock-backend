@@ -46,6 +46,7 @@ export class NoteService {
           sourceUrl: note.sourceUrl ?? undefined,
           highlightStart: note.highlightStart ?? undefined,
           highlightEnd: note.highlightEnd ?? undefined,
+          relatedStocks: note.relatedStocks || [],
           createdAt: note.createdAt,
           updatedAt: note.updatedAt,
         })),
@@ -92,6 +93,7 @@ export class NoteService {
         sourceUrl: note.sourceUrl ?? undefined,
         highlightStart: note.highlightStart ?? undefined,
         highlightEnd: note.highlightEnd ?? undefined,
+        relatedStocks: note.relatedStocks || [],
         createdAt: note.createdAt,
         updatedAt: note.updatedAt,
       };
@@ -121,6 +123,7 @@ export class NoteService {
       sourceUrl?: string;
       highlightStart?: number;
       highlightEnd?: number;
+      relatedStocks?: string[];
     }
   ) {
     const tracker = createStepTracker('NoteService.createNote');
@@ -160,6 +163,7 @@ export class NoteService {
                   sourceUrl: data.sourceUrl,
                   highlightStart: data.highlightStart,
                   highlightEnd: data.highlightEnd,
+                  relatedStocks: data.relatedStocks || [],
                 },
               });
             });
@@ -192,6 +196,7 @@ export class NoteService {
         sourceUrl: result.sourceUrl ?? undefined,
         highlightStart: result.highlightStart ?? undefined,
         highlightEnd: result.highlightEnd ?? undefined,
+        relatedStocks: result.relatedStocks || [],
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       };
@@ -213,7 +218,7 @@ export class NoteService {
    * - 매수/매도가 없으므로 민감한 데이터가 아니므로 현재 구조로 충분
    * - 필요시 Optimistic Locking (version 필드) 추가 가능
    */
-  async updateNote(userId: string, noteId: string, data: { title?: string; content?: string; tags?: string[] }) {
+  async updateNote(userId: string, noteId: string, data: { title?: string; content?: string; tags?: string[]; relatedStocks?: string[] }) {
     const tracker = createStepTracker('NoteService.updateNote');
 
     try {
@@ -224,6 +229,7 @@ export class NoteService {
       if (data.title !== undefined) updateData.title = data.title;
       if (data.content !== undefined) updateData.content = data.content;
       if (data.tags !== undefined) updateData.tags = data.tags;
+      if (data.relatedStocks !== undefined) updateData.relatedStocks = data.relatedStocks;
 
       const result = await prisma.note.updateMany({
         where: {
@@ -259,6 +265,7 @@ export class NoteService {
         sourceUrl: note.sourceUrl ?? undefined,
         highlightStart: note.highlightStart ?? undefined,
         highlightEnd: note.highlightEnd ?? undefined,
+        relatedStocks: note.relatedStocks || [],
         createdAt: note.createdAt,
         updatedAt: note.updatedAt,
       };
