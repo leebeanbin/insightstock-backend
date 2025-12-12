@@ -328,6 +328,7 @@ model Note {
   chartData      Json?    // 차트 데이터 (JSON)
   highlightStart Int?     // 하이라이팅 시작 오프셋 (문자 단위)
   highlightEnd   Int?     // 하이라이팅 끝 오프셋 (문자 단위)
+  relatedStocks  String[] // 관련 종목 코드 배열
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
