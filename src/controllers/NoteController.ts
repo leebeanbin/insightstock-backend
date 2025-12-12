@@ -59,7 +59,7 @@ export class NoteController {
    */
   async createNote(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const userId = request.userId!;
-    const { title, content, tags, newsId, scrapedContent, sourceUrl, highlightStart, highlightEnd } = request.body as {
+    const { title, content, tags, newsId, scrapedContent, sourceUrl, highlightStart, highlightEnd, relatedStocks } = request.body as {
       title: string;
       content: string;
       tags?: string[];
@@ -68,6 +68,7 @@ export class NoteController {
       sourceUrl?: string;
       highlightStart?: number;
       highlightEnd?: number;
+      relatedStocks?: string[];
     };
 
     const note = await this.noteService.createNote(userId, {
@@ -79,6 +80,7 @@ export class NoteController {
       sourceUrl,
       highlightStart,
       highlightEnd,
+      relatedStocks,
     });
 
     reply.status(201).send({
@@ -93,13 +95,14 @@ export class NoteController {
   async updateNote(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const userId = request.userId!;
     const { id } = request.params as { id: string };
-    const { title, content, tags } = request.body as {
+    const { title, content, tags, relatedStocks } = request.body as {
       title?: string;
       content?: string;
       tags?: string[];
+      relatedStocks?: string[];
     };
 
-    const note = await this.noteService.updateNote(userId, id, { title, content, tags });
+    const note = await this.noteService.updateNote(userId, id, { title, content, tags, relatedStocks });
 
     reply.send({
       success: true,
