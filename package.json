@@ -1,7 +1,7 @@
 {
-  "name": "insightstock-backend",
+  "name": "finfolio-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "FinFolio - AI-powered Financial Learning Platform API",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec tsx src/server.ts",

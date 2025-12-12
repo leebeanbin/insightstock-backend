@@ -1,4 +1,4 @@
-# InsightStock Backend
+# FinFolio Backend
 
 AI 기반 금융 학습 플랫폼 백엔드 API - Clean Architecture + DDD
 
@@ -476,7 +476,7 @@ NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
 
 # 데이터베이스
-DATABASE_URL=postgresql://user:password@localhost:5432/insightstock
+DATABASE_URL=postgresql://user:password@localhost:5432/finfolio
 
 # Redis
 REDIS_HOST=localhost
@@ -508,7 +508,7 @@ NAVER_API_BASE_URL=https://m.stock.naver.com/api
 ```bash
 # 루트 디렉토리에서 전체 프로젝트 설정
 cd /Users/leejungbin/Downloads
-bash setup-insightstock.sh
+bash setup-finfolio.sh
 ```
 
 또는 백엔드만 설정:
@@ -546,7 +546,7 @@ pnpm install
 # .env 파일이 이미 있다면 확인, 없다면 생성
 # 필수 설정:
 PORT=3001
-DATABASE_URL="postgresql://leejungbin@localhost:5432/insightstock?schema=public"
+DATABASE_URL="postgresql://leejungbin@localhost:5432/finfolio?schema=public"
 CORS_ORIGIN=http://localhost:3000
 
 # 채팅 기능 사용 시 필수:
@@ -555,14 +555,14 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 # 선택사항 (RAG 기능):
 PINECONE_API_KEY=your-pinecone-api-key
 PINECONE_ENVIRONMENT=us-east-1
-PINECONE_INDEX_NAME=insightstock
+PINECONE_INDEX_NAME=finfolio
 ```
 
 #### 3. 데이터베이스 설정
 
 ```bash
 # 데이터베이스 생성 (없는 경우)
-createdb insightstock
+createdb finfolio
 
 # Prisma Client 생성
 pnpm db:generate
