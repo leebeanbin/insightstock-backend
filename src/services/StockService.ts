@@ -228,13 +228,13 @@ export class StockService implements IStockFacade {
         // Prisma Extensions를 사용한 자동 캐싱 (차트 데이터는 10초 TTL - 실시간성 중요)
         const stockRecord = await (prisma as any).stock.findUniqueWithCache(
           {
-            where: { code },
-            include: {
-              prices: {
-                where: dateFilter,
-                orderBy: { date: 'asc' },
-              },
+          where: { code },
+          include: {
+            prices: {
+              where: dateFilter,
+              orderBy: { date: 'asc' },
             },
+          },
           },
           `stock:chart:${code}:${period}:${JSON.stringify(dateFilter)}`,
           10 // 10초 캐시 (차트 데이터는 실시간성 중요)
@@ -288,14 +288,14 @@ export class StockService implements IStockFacade {
       // Prisma Extensions를 사용한 자동 캐싱 (1분 TTL)
       const stockRecord = await (prisma as any).stock.findUniqueWithCache(
         {
-          where: { code },
-          select: { 
-            marketCap: true,
-            prices: {
-              orderBy: { date: 'desc' },
-              take: 1, // 최신 1개만
-            },
+        where: { code },
+        select: { 
+          marketCap: true,
+          prices: {
+            orderBy: { date: 'desc' },
+            take: 1, // 최신 1개만
           },
+        },
         },
         `stock:detail:${code}`,
         60 // 1분 캐시

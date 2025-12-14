@@ -28,16 +28,18 @@ export class ConversationResponseDto {
   constructor(
     public readonly id: string,
     public readonly title: string,
+    public readonly lastMessage: string,
     public readonly category?: string,
     public readonly tags: string[] = [],
     public readonly createdAt: Date = new Date(),
     public readonly updatedAt: Date = new Date()
   ) {}
 
-  static to(conversation: Conversation): ConversationResponseDto {
+  static to(conversation: Conversation, lastMessage: string = ''): ConversationResponseDto {
     return new ConversationResponseDto(
       conversation.id,
       conversation.title,
+      lastMessage,
       conversation.category,
       conversation.tags,
       conversation.createdAt,

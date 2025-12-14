@@ -44,9 +44,23 @@ export class ChatService implements IChatFacade {
 
     const conversations = await this.conversationRepository.findAll(userId, search, category);
     tracker.step('DB 조회 완료');
-    
+
+    tracker.step('각 대화의 마지막 메시지 조회');
+    // 각 conversation의 마지막 메시지를 가져오기
+    const conversationsWithLastMessage = await Promise.all(
+      conversations.map(async (c) => {
+        const messages = await this.messageRepository.findAll(c.id);
+        const lastMessage = messages.length > 0
+          ? messages[messages.length - 1].content.substring(0, 50) + (messages[messages.length - 1].content.length > 50 ? '...' : '')
+          : '';
+        return { conversation: c, lastMessage };
+      })
+    );
+
     tracker.step('DTO 변환');
-    const result = conversations.map((c) => ConversationResponseDto.to(c));
+    const result = conversationsWithLastMessage.map(({ conversation, lastMessage }) =>
+      ConversationResponseDto.to(conversation, lastMessage)
+    );
     
     tracker.step('캐시 저장');
     // 캐시 저장 (TTL: 5분) - 검색/필터가 없을 때만

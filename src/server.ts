@@ -42,10 +42,10 @@ const gracefulShutdown = async (signal: string) => {
   const app = getAppInstance();
   
   if (app) {
-    // 새로운 연결 거부
-    app.server.close(() => {
-      logger.info('Server stopped accepting new connections');
-    });
+  // 새로운 연결 거부
+  app.server.close(() => {
+    logger.info('Server stopped accepting new connections');
+  });
   }
 
   // WebSocket, 메시지 큐, 파이프라인 정리
@@ -64,8 +64,8 @@ const gracefulShutdown = async (signal: string) => {
     const app = getAppInstance();
     
     if (app) {
-      await app.close();
-      logger.info('Fastify server closed');
+    await app.close();
+    logger.info('Fastify server closed');
     }
 
     await prisma.$disconnect();

@@ -36,17 +36,17 @@ export class NewsRepositoryAdapter implements INewsRepository {
         // Prisma Extensions를 사용한 자동 캐싱 (5분 TTL)
         (prisma as any).news.findManyWithCache(
           {
-            where,
-            include: {
-              stocks: {
-                include: {
-                  stock: true,
-                },
+          where,
+          include: {
+            stocks: {
+              include: {
+                stock: true,
               },
             },
-            orderBy: { publishedAt: 'desc' },
-            take: params.limit || 20,
-            skip: params.offset || 0,
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: params.limit || 20,
+          skip: params.offset || 0,
           },
           cacheKey,
           300 // 5분 캐시
@@ -87,14 +87,14 @@ export class NewsRepositoryAdapter implements INewsRepository {
       // Prisma Extensions를 사용한 자동 캐싱 (10분 TTL - 뉴스 상세는 자주 변경되지 않음)
       const news = await (prisma as any).news.findUniqueWithCache(
         {
-          where: { id },
-          include: {
-            stocks: {
-              include: {
-                stock: true,
-              },
+        where: { id },
+        include: {
+          stocks: {
+            include: {
+              stock: true,
             },
           },
+        },
         },
         `news:detail:${id}`,
         600 // 10분 캐시
@@ -142,21 +142,21 @@ export class NewsRepositoryAdapter implements INewsRepository {
 
       // 캐시 키 생성
       const cacheKey = `news:stock:${stockCode}:${limit}`;
-      
+
       const [news, total] = await Promise.all([
         // Prisma Extensions를 사용한 자동 캐싱 (5분 TTL)
         (prisma as any).news.findManyWithCache(
           {
-            where,
-            include: {
-              stocks: {
-                include: {
-                  stock: true,
-                },
+          where,
+          include: {
+            stocks: {
+              include: {
+                stock: true,
               },
             },
-            orderBy: { publishedAt: 'desc' },
-            take: limit,
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: limit,
           },
           cacheKey,
           300 // 5분 캐시
