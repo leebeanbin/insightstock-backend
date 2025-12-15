@@ -53,11 +53,15 @@ export class StockService implements IStockFacade {
     tracker.step('카테고리별 종목 목록 조회');
     const stockList = POPULAR_STOCKS[category] || POPULAR_STOCKS['인기'];
 
-    tracker.step('병렬 Stock 조회 시작');
-    const stocksWithPrice = (await Promise.all(
-      stockList.map(async (stock, index) => {
-        // 1. DB에서 먼저 조회
-        let dbStock = await this.stockRepo.findByCode(stock.code);
+    tracker.step('Batch Stock 조회 시작 (최적화됨)');
+    // ✅ 쿼리 최적화: 개별 쿼리 대신 batch query 사용 (8번 쿼리 → 1번 쿼리)
+    const codes = stockList.map(s => s.code);
+    const dbStocks = await this.stockRepo.findByCodes(codes);
+    const stockMap = new Map(dbStocks.map(s => [s.code, s]));
+
+    const stocksWithPrice = stockList.map((stock, index) => {
+        // 1. DB에서 조회한 stock 사용
+        let dbStock = stockMap.get(stock.code);
 
         // TODO: 실제 증권 API 연결 시 활성화
         // 2. DB에 없으면 네이버 API 호출 후 DB에 저장
@@ -103,8 +107,7 @@ export class StockService implements IStockFacade {
           logger.warn(`Stock ${stock.code} not found in DB. Please run seed script.`);
           return null;
         }
-      })
-    )).filter((stock): stock is StockResponseDto => stock !== null);
+      }).filter((stock): stock is StockResponseDto => stock !== null);
     tracker.step('병렬 Stock 조회 완료');
 
     tracker.finish();

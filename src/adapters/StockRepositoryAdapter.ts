@@ -82,6 +82,39 @@ export class StockRepositoryAdapter implements IStockRepository {
     }
   }
 
+  async findByCodes(codes: string[]): Promise<Stock[]> {
+    try {
+      // Batch query 최적화: WHERE code IN (...) 사용
+      // Prisma Extensions를 사용한 자동 캐싱 (1분 TTL)
+      const sortedCodes = [...codes].sort().join(',');
+      const stocks = await (this.client as any).stock.findManyWithCache(
+        { where: { code: { in: codes } } },
+        `stock:codes:${sortedCodes}`,
+        60 // 1분 캐시
+      );
+
+      return stocks.map(
+        (stock) =>
+          new Stock(
+            stock.id,
+            stock.code,
+            stock.name,
+            stock.market,
+            stock.sector,
+            stock.currentPrice,
+            stock.change,
+            stock.changeRate,
+            stock.volume,
+            stock.createdAt,
+            stock.updatedAt
+          )
+      );
+    } catch (error) {
+      logger.error('StockRepositoryAdapter.findByCodes error:', error);
+      throw new DatabaseError('Failed to fetch stocks by codes from database');
+    }
+  }
+
   async findMany(ids: string[]): Promise<Stock[]> {
     try {
       // Prisma Extensions를 사용한 자동 캐싱 (1분 TTL)

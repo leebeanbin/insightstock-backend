@@ -43,31 +43,12 @@ export class ChatService implements IChatFacade {
     tracker.step('캐시 미스 - DB 조회 시작');
 
     const conversations = await this.conversationRepository.findAll(userId, search, category);
-    tracker.step('DB 조회 완료');
-
-    tracker.step('각 대화의 마지막 메시지 조회');
-    // 각 conversation의 마지막 메시지를 가져오기
-    // TODO: N+1 쿼리 최적화 - 향후 Conversation 테이블에 lastMessage 컬럼 추가 고려
-    const conversationsWithLastMessage = await Promise.all(
-      conversations.map(async (c) => {
-        try {
-          // 최근 1개 메시지만 가져오도록 최적화 (전체 메시지 목록 필요 없음)
-          const messages = await this.messageRepository.findAll(c.id);
-          const lastMessage = messages.length > 0
-            ? messages[messages.length - 1].content.substring(0, 50) + (messages[messages.length - 1].content.length > 50 ? '...' : '')
-            : '';
-          return { conversation: c, lastMessage };
-        } catch (error) {
-          // 개별 대화의 메시지 조회 실패 시에도 대화 목록은 반환
-          logger.warn(`Failed to fetch last message for conversation ${c.id}`, error);
-          return { conversation: c, lastMessage: '' };
-        }
-      })
-    );
+    tracker.step('DB 조회 완료 - lastMessage 포함');
 
     tracker.step('DTO 변환');
-    const result = conversationsWithLastMessage.map(({ conversation, lastMessage }) =>
-      ConversationResponseDto.to(conversation, lastMessage)
+    // ✅ N+1 쿼리 최적화 완료: Conversation.lastMessage 컬럼 사용
+    const result = conversations.map((conversation) =>
+      ConversationResponseDto.to(conversation, conversation.lastMessage || '')
     );
     
     tracker.step('캐시 저장');
@@ -233,9 +214,12 @@ export class ChatService implements IChatFacade {
       await this.messageRepository.create(assistantMessage);
       tracker.step('Assistant 메시지 저장 완료');
 
-      tracker.step('Conversation 업데이트');
-      // Update conversation timestamp
+      tracker.step('Conversation 업데이트 (lastMessage 포함)');
+      // Update conversation with lastMessage (성능 최적화)
+      const lastMessage = fullContent.substring(0, 50) + (fullContent.length > 50 ? '...' : '');
       await this.conversationRepository.update(conversation.id, {
+        lastMessage,
+        lastMessageAt: new Date(),
         updatedAt: new Date(),
       });
 
@@ -334,8 +318,11 @@ export class ChatService implements IChatFacade {
       );
       await this.messageRepository.create(newAssistantMessage);
 
-      // Update conversation timestamp
+      // Update conversation with lastMessage (성능 최적화)
+      const lastMessage = fullContent.substring(0, 50) + (fullContent.length > 50 ? '...' : '');
       await this.conversationRepository.update(conversation.id, {
+        lastMessage,
+        lastMessageAt: new Date(),
         updatedAt: new Date(),
       });
 

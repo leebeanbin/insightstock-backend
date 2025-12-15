@@ -6,6 +6,8 @@ export class Conversation {
     public readonly category?: string,
     public readonly tags: string[] = [],
     public readonly createdAt: Date = new Date(),
-    public readonly updatedAt: Date = new Date()
+    public readonly updatedAt: Date = new Date(),
+    public readonly lastMessage?: string,
+    public readonly lastMessageAt?: Date
   ) {}
 }

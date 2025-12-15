@@ -34,7 +34,9 @@ export class ConversationRepositoryAdapter implements IConversationRepository {
             c.category || undefined,
             c.tags || [],
             c.createdAt,
-            c.updatedAt
+            c.updatedAt,
+            c.lastMessage || undefined,
+            c.lastMessageAt || undefined
           )
       );
     } catch (error) {
@@ -58,7 +60,9 @@ export class ConversationRepositoryAdapter implements IConversationRepository {
         conversation.category || undefined,
         conversation.tags || [],
         conversation.createdAt,
-        conversation.updatedAt
+        conversation.updatedAt,
+        conversation.lastMessage || undefined,
+        conversation.lastMessageAt || undefined
       );
     } catch (error) {
       logger.error('ConversationRepositoryAdapter.findById error:', error);
@@ -84,7 +88,9 @@ export class ConversationRepositoryAdapter implements IConversationRepository {
         created.category || undefined,
         created.tags || [],
         created.createdAt,
-        created.updatedAt
+        created.updatedAt,
+        created.lastMessage || undefined,
+        created.lastMessageAt || undefined
       );
     } catch (error) {
       logger.error('ConversationRepositoryAdapter.create error:', error);
@@ -100,6 +106,9 @@ export class ConversationRepositoryAdapter implements IConversationRepository {
           ...(conversation.title && { title: conversation.title }),
           ...(conversation.category !== undefined && { category: conversation.category }),
           ...(conversation.tags !== undefined && { tags: conversation.tags }),
+          ...(conversation.lastMessage !== undefined && { lastMessage: conversation.lastMessage }),
+          ...(conversation.lastMessageAt !== undefined && { lastMessageAt: conversation.lastMessageAt }),
+          ...(conversation.updatedAt !== undefined && { updatedAt: conversation.updatedAt }),
         },
       });
 
@@ -110,7 +119,9 @@ export class ConversationRepositoryAdapter implements IConversationRepository {
         updated.category || undefined,
         updated.tags || [],
         updated.createdAt,
-        updated.updatedAt
+        updated.updatedAt,
+        updated.lastMessage || undefined,
+        updated.lastMessageAt || undefined
       );
     } catch (error) {
       logger.error('ConversationRepositoryAdapter.update error:', error);
