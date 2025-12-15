@@ -7,51 +7,24 @@ import { MessageFeedbackController } from '../controllers/MessageFeedbackControl
 import { MessageFeedbackService } from '../services/MessageFeedbackService';
 import { MessageFeedbackRepositoryAdapter } from '../adapters/MessageFeedbackRepositoryAdapter';
 import { authenticate } from '../middlewares/auth';
-import { WebSocketService } from '../services/WebSocketService';
-import { authenticateWebSocket } from '../middlewares/websocketAuth';
-import { logger } from '../config/logger';
 
 // Dependency Injection
 const conversationRepository = new ConversationRepositoryAdapter();
 const messageRepository = new MessageRepositoryAdapter();
 const chatFacade = new ChatService(conversationRepository, messageRepository);
 const chatController = new ChatController(chatFacade);
-const webSocketService = new WebSocketService(chatFacade);
 
 const feedbackRepository = new MessageFeedbackRepositoryAdapter();
 const feedbackService = new MessageFeedbackService(feedbackRepository);
 const feedbackController = new MessageFeedbackController(feedbackService);
 
 const routes: FastifyPluginAsync = async (fastify) => {
-  // Auth hook for all routes (WebSocket 제외)
+  // Auth hook for all routes
   fastify.addHook('onRequest', async (request, reply) => {
-    // WebSocket 업그레이드 요청은 별도 처리
-    if (request.headers.upgrade === 'websocket') {
-      return;
-    }
     await authenticate(request, reply);
   });
 
-  // WebSocket 엔드포인트
-  // @ts-ignore - @fastify/websocket 타입 정의 문제로 인한 임시 처리
-  fastify.get('/ws', { websocket: true }, async (connection: any, request: any) => {
-    try {
-      // WebSocket 연결 인증
-      const userId = authenticateWebSocket(request);
-      await webSocketService.handleConnection(connection.socket, userId);
-    } catch (error) {
-      logger.error('WebSocket connection error:', error);
-      if (connection.socket && typeof connection.socket.close === 'function') {
-        connection.socket.close(1008, 'Unauthorized');
-      }
-    }
-  });
-
-  // 대화 목록 조회 (기본 엔드포인트)
-  fastify.get('/', async (request, reply) => {
-    await chatController.getConversations(request, reply);
-  });
-
+  // 대화 목록 조회
   fastify.get('/conversations', async (request, reply) => {
     await chatController.getConversations(request, reply);
   });
@@ -65,12 +38,8 @@ const routes: FastifyPluginAsync = async (fastify) => {
     await chatController.getMessages(request, reply);
   });
 
-  // SSE 스트리밍 - 하위 호환성을 위해 유지 (GET과 POST 모두 지원)
+  // SSE 스트리밍 (Server-Sent Events)
   fastify.get('/stream', async (request, reply) => {
-    await chatController.streamChat(request, reply);
-  });
-
-  fastify.post('/stream', async (request, reply) => {
     await chatController.streamChat(request, reply);
   });
 
