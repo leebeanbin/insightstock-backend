@@ -108,5 +108,5 @@ async getCachedData(key: string): Promise<Data[]> {
 
 ---
 
-**작성일**: 2024년  
+**작성일**: 2025년 12월 15일  
 **프로젝트**: InsightStock Backend

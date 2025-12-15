@@ -277,4 +277,4 @@
 
 **작성자**: AI Assistant  
 **프로젝트**: InsightStock Backend  
-**작성일**: 2024년
+**작성일**: 2025년 12월 15일
