@@ -3,6 +3,7 @@ import { logger } from '../config/logger';
 import { createStepTracker } from '../utils/aop';
 import { withRetry } from '../utils/retry';
 import { NotFoundError } from '../errors/AppError';
+import { handleSystemError } from '../utils/error-handler';
 
 /**
  * 노트 서비스
@@ -55,9 +56,8 @@ export class NoteService {
       tracker.finish();
       return result;
     } catch (error) {
-      logger.error('NoteService.getNotes error:', error);
       tracker.finish();
-      throw error;
+      handleSystemError(error, 'NoteService.getNotes');
     }
   }
 
@@ -98,9 +98,8 @@ export class NoteService {
         updatedAt: note.updatedAt,
       };
     } catch (error) {
-      logger.error('NoteService.getNoteById error:', error);
       tracker.finish();
-      throw error;
+      handleSystemError(error, 'NoteService.getNoteById');
     }
   }
 
@@ -147,7 +146,7 @@ export class NoteService {
                   where: { id: data.newsId },
                 });
                 if (!news) {
-                  throw new Error(`News with id ${data.newsId} not found`);
+                  throw new NotFoundError(`News with id ${data.newsId}`);
                 }
               }
 
@@ -204,9 +203,8 @@ export class NoteService {
       tracker.finish();
       return formattedResult;
     } catch (error) {
-      logger.error('NoteService.createNote error:', error);
       tracker.finish();
-      throw error;
+      handleSystemError(error, 'NoteService.createNote');
     }
   }
 
@@ -272,9 +270,8 @@ export class NoteService {
       tracker.finish();
       return formattedResult;
     } catch (error) {
-      logger.error('NoteService.updateNote error:', error);
       tracker.finish();
-      throw error;
+      handleSystemError(error, 'NoteService.updateNote');
     }
   }
 
@@ -304,9 +301,8 @@ export class NoteService {
       tracker.finish();
       return true;
     } catch (error) {
-      logger.error('NoteService.deleteNote error:', error);
       tracker.finish();
-      throw error;
+      handleSystemError(error, 'NoteService.deleteNote');
     }
   }
 }
