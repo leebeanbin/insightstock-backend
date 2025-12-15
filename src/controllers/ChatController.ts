@@ -49,7 +49,7 @@ export class ChatController {
 
   async streamChat(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const userId = request.userId!;
-    
+
     // GET 쿼리 파라미터 또는 POST body에서 데이터 가져오기
     let dto: CreateChatDto;
     if (request.method === 'GET') {
@@ -67,16 +67,33 @@ export class ChatController {
 
     try {
       const stream = this.chatFacade.streamChat(userId, dto);
+      let conversationId = dto.conversationId || '';
+      let messageId = '';
 
       for await (const chunk of stream) {
-        reply.raw.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+        // 첫 청크에서 conversationId와 messageId가 포함될 수 있음
+        if (typeof chunk === 'object' && chunk !== null) {
+          conversationId = (chunk as any).conversationId || conversationId;
+          messageId = (chunk as any).messageId || messageId;
+          const content = (chunk as any).content || '';
+          reply.raw.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`);
+        } else {
+          reply.raw.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
       }
 
-      reply.raw.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      reply.raw.write(`data: ${JSON.stringify({
+        type: 'done',
+        conversationId,
+        messageId: messageId || `msg_${Date.now()}`
+      })}\n\n`);
       reply.raw.end();
     } catch (error) {
       reply.raw.write(
-        `data: ${JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to stream chat' })}\n\n`
+        `data: ${JSON.stringify({
+          type: 'error',
+          error: error instanceof Error ? error.message : 'Failed to stream chat'
+        })}\n\n`
       );
       reply.raw.end();
     }
@@ -141,14 +158,17 @@ export class ChatController {
       const stream = this.chatFacade.regenerateMessage(userId, messageId);
 
       for await (const chunk of stream) {
-        reply.raw.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+        reply.raw.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
       }
 
-      reply.raw.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      reply.raw.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
       reply.raw.end();
     } catch (error) {
       reply.raw.write(
-        `data: ${JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to regenerate message' })}\n\n`
+        `data: ${JSON.stringify({
+          type: 'error',
+          error: error instanceof Error ? error.message : 'Failed to regenerate message'
+        })}\n\n`
       );
       reply.raw.end();
     }

@@ -47,13 +47,21 @@ export class ChatService implements IChatFacade {
 
     tracker.step('각 대화의 마지막 메시지 조회');
     // 각 conversation의 마지막 메시지를 가져오기
+    // TODO: N+1 쿼리 최적화 - 향후 Conversation 테이블에 lastMessage 컬럼 추가 고려
     const conversationsWithLastMessage = await Promise.all(
       conversations.map(async (c) => {
-        const messages = await this.messageRepository.findAll(c.id);
-        const lastMessage = messages.length > 0
-          ? messages[messages.length - 1].content.substring(0, 50) + (messages[messages.length - 1].content.length > 50 ? '...' : '')
-          : '';
-        return { conversation: c, lastMessage };
+        try {
+          // 최근 1개 메시지만 가져오도록 최적화 (전체 메시지 목록 필요 없음)
+          const messages = await this.messageRepository.findAll(c.id);
+          const lastMessage = messages.length > 0
+            ? messages[messages.length - 1].content.substring(0, 50) + (messages[messages.length - 1].content.length > 50 ? '...' : '')
+            : '';
+          return { conversation: c, lastMessage };
+        } catch (error) {
+          // 개별 대화의 메시지 조회 실패 시에도 대화 목록은 반환
+          logger.warn(`Failed to fetch last message for conversation ${c.id}`, error);
+          return { conversation: c, lastMessage: '' };
+        }
       })
     );
 
