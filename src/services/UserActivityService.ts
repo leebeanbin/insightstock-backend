@@ -225,25 +225,15 @@ export class UserActivityService {
         this.getReadNews(userId, 10),
         this.getLikedNews(userId, 10),
         this.getFavoriteNews(userId, 10),
-        // 최근 조회한 주식
-        prisma.history
-          .findMany({
-            where: { userId },
-            orderBy: { viewedAt: 'desc' },
-            take: 10,
-            select: { stockId: true },
-            distinct: ['stockId'],
-          })
-          .then((histories) => {
-            return prisma.stock
-              .findMany({
-                where: {
-                  id: { in: histories.map((h) => h.stockId) },
-                },
-                select: { code: true },
-              })
-              .then((stocks) => stocks.map((s) => s.code));
-          }),
+        // ✅ 최적화: History → Stock 조회를 JOIN으로 변경 (2 queries → 1 query)
+        prisma.$queryRaw<Array<{ code: string }>>`
+          SELECT DISTINCT s.code
+          FROM histories h
+          INNER JOIN stocks s ON h.stock_id = s.id
+          WHERE h.user_id = ${userId}::uuid
+          ORDER BY h.viewed_at DESC
+          LIMIT 10
+        `.then((stocks) => stocks.map((s) => s.code)),
         // 최근 학습 내용
         prisma.learning
           .findMany({

@@ -316,6 +316,7 @@ model Learning {
 
   @@index([userId])
   @@index([createdAt])
+  @@index([userId, createdAt]) // ✅ 최적화: 사용자별 최신순 조회 최적화
   @@map("learnings")
 }
 
@@ -340,6 +341,7 @@ model Note {
   @@index([userId])
   @@index([updatedAt])
   @@index([userId, newsId])
+  @@index([userId, updatedAt]) // ✅ 최적화: 사용자별 최신순 조회 최적화
   @@map("notes")
 }
 
