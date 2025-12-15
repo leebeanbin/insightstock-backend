@@ -89,10 +89,15 @@ export class ChatController {
       })}\n\n`);
       reply.raw.end();
     } catch (error) {
+      logger.error('ChatController.streamChat error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to generate chat response';
+      
       reply.raw.write(
         `data: ${JSON.stringify({
           type: 'error',
-          error: error instanceof Error ? error.message : 'Failed to stream chat'
+          error: errorMessage
         })}\n\n`
       );
       reply.raw.end();
