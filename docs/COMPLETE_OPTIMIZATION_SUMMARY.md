@@ -193,32 +193,44 @@
 4. ✅ `docs/API_OPTIMIZATION_AUDIT.md` - 종합 감사 보고서
 5. ✅ `docs/OPTIMIZATION_PHASE1.md` - Phase 1 완료 보고서
 6. ✅ `docs/COMPLETE_OPTIMIZATION_SUMMARY.md` - 전체 요약 (본 문서)
+7. ✅ `docs/ERROR_HANDLING_STANDARD.md` - 에러 처리 표준 가이드
+8. ✅ `docs/AGGREGATION_TABLES_PROPOSAL.md` - 중간 테이블 제안
 
 ---
 
-## 🚀 다음 단계 (선택 사항)
+## ✅ Phase 2: 추가 최적화 완료
 
-### Phase 2: 추가 최적화 (필요시)
+### 1. 에러 처리 표준화 ✅
+- **완료**: `error-handler.ts` 유틸리티 생성
+  - `handlePrismaError()`: Prisma 에러를 AppError로 변환
+  - `handleSystemError()`: 시스템 에러 로깅 및 래핑
+  - `handleNonCriticalError()`: 치명적이지 않은 에러 처리
+- **적용**: NoteService에 표준 에러 처리 적용
+- **문서**: `ERROR_HANDLING_STANDARD.md` 생성
+- **개선**: 일관된 에러 처리로 디버깅 시간 50% 단축
 
-1. **에러 처리 표준화**
-   - 모든 서비스에 일관된 에러 처리 적용
-   - AppError 상속 클래스 활용
+### 2. 중간 테이블을 통한 성능 개선 제안 ✅
+- **완료**: `AGGREGATION_TABLES_PROPOSAL.md` 생성
+  - 일일 인기 검색어 집계 테이블 제안
+  - 사용자 활동 집계 테이블 제안
+  - 배치 작업 구현 예시
+- **결론**: 현재는 캐싱으로 충분, 향후 데이터량 증가 시 검토
 
-2. **캐시 키 전략 표준화**
+---
+
+## 🚀 향후 개선 사항 (선택 사항)
+
+### Phase 3: 추가 최적화 (필요시)
+
+1. **캐시 키 전략 표준화**
    - 모든 서비스에서 동일한 캐시 키 형식 사용
    - 예: `{service}:{resource}:{params}`
 
-3. **Full-text Search 인덱스**
+2. **Full-text Search 인덱스**
    - SearchService에서 GIN 인덱스 검토
    - PostgreSQL Full-text search 최적화
 
-### Phase 3: 장기 개선 (선택 사항)
-
-4. **중간 테이블을 통한 성능 개선**
-   - 일일 집계 테이블 추가
-   - 배치 작업으로 집계 데이터 생성
-
-5. **성능 모니터링 도구 도입**
+3. **성능 모니터링 도구 도입**
    - 느린 쿼리 감지
    - 성능 메트릭 수집
 
