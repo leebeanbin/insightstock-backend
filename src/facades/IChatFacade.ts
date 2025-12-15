@@ -2,6 +2,7 @@ import { ChatResponseDto, ConversationResponseDto } from '../dto/chat/ChatRespon
 import { CreateChatDto } from '../dto/chat/CreateChatDto';
 
 export interface IChatFacade {
+  createConversation(userId: string, title: string): Promise<ConversationResponseDto>;
   getConversations(userId: string, search?: string, category?: string): Promise<ConversationResponseDto[]>;
   getMessages(conversationId: string, userId: string): Promise<ChatResponseDto[]>;
   streamChat(userId: string, dto: CreateChatDto): AsyncGenerator<string, void, unknown>;

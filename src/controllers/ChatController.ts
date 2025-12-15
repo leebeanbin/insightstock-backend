@@ -20,14 +20,11 @@ export class ChatController {
     const userId = request.userId!;
     const { title } = request.body as { title: string };
 
-    // streamChat을 통해 대화가 생성되므로, 여기서는 빈 대화만 생성
-    const conversation = {
-      id: `conv_${Date.now()}`,
+    // ✅ 실제 DB에 저장: ChatService를 통해 UUID 형식 ID 생성
+    const conversation = await this.chatFacade.createConversation(
       userId,
-      title: title || 'New Conversation',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      title || 'New Conversation'
+    );
 
     reply.status(201).send({
       success: true,

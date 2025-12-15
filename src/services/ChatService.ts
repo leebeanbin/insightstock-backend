@@ -26,6 +26,34 @@ export class ChatService implements IChatFacade {
     });
   }
 
+  async createConversation(userId: string, title: string): Promise<ConversationResponseDto> {
+    const tracker = createStepTracker('ChatService.createConversation');
+    
+    tracker.step('Conversation 생성 시작');
+    const conversation = new Conversation(
+      '', // ID는 DB에서 생성됨
+      userId,
+      title || 'New Conversation',
+      undefined, // category
+      [], // tags
+      new Date(),
+      new Date()
+    );
+    
+    const created = await this.conversationRepository.create(conversation);
+    tracker.step('Conversation 생성 완료');
+
+    tracker.step('DTO 변환');
+    const result = ConversationResponseDto.to(created, created.lastMessage || '');
+    
+    tracker.step('캐시 무효화');
+    // 새 대화가 생성되었으므로 대화 목록 캐시 무효화
+    await cacheService.delete(`conversations:${userId}`);
+    
+    tracker.finish();
+    return result;
+  }
+
   async getConversations(userId: string, search?: string, category?: string): Promise<ConversationResponseDto[]> {
     const tracker = createStepTracker('ChatService.getConversations');
     
