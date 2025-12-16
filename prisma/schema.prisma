@@ -314,9 +314,16 @@ model Learning {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([createdAt])
-  @@index([userId, createdAt]) // ✅ 최적화: 사용자별 최신순 조회 최적화
+  // ✅ 인덱스 최적화: 조회 성능 향상
+  @@index([userId])                    // 사용자별 조회 최적화
+  @@index([createdAt])                // 시간순 조회
+  @@index([userId, createdAt])         // 사용자별 최신순 조회 (페이지네이션 최적화)
+  @@index([concept])                   // 개념별 조회 (통계/분석)
+  @@index([userId, concept])           // 사용자+개념 조회 (필터링 최적화)
+  // Note: relatedStocks 배열 검색을 위해 GIN 인덱스가 필요합니다.
+  // Prisma는 배열 필드에 대한 인덱스를 자동으로 GIN으로 생성하지만,
+  // 명시적으로 확인하려면 마이그레이션 후 다음 SQL을 실행하세요:
+  // CREATE INDEX IF NOT EXISTS "learnings_relatedStocks_idx" ON "learnings" USING GIN ("relatedStocks");
   @@map("learnings")
 }
 
